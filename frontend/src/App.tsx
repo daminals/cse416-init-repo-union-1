@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import logo from './assets/images/logo-universal.png';
+import logo from './assets/images/remychef.png';
 import './App.css';
 import {Greet} from "../wailsjs/go/main/App";
 
@@ -15,7 +15,7 @@ function App() {
 
     return (
         <div id="App">
-            <img src={logo} id="logo" alt="logo"/>
+<img src={logo} id="logo" alt="logo" style={{ height: "200px", width: "auto" }} />
             <div id="result" className="result">{resultText}</div>
             <div id="input" className="input-box">
                 <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
