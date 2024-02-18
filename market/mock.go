@@ -9,6 +9,7 @@ import (
 
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode" // Replace "your-package-path" with the actual package path
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -30,7 +31,8 @@ var fileRequestList = []FileRequest{
 }
 
 func (s *server) AddFileRequest(ctx context.Context, in *pb.FileHash) (*emptypb.Empty, error) {
-	log.Printf("Received: %v", in.GetHash())
+	p, _ := peer.FromContext(ctx)
+	log.Printf("Received: %v, From: %v", in.GetHash(), p.Addr.String())
 	return &emptypb.Empty{}, nil
 }
 
