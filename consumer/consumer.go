@@ -19,6 +19,7 @@ var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
 	port = flag.Int("port", 50052, "The consumer service port")
 	fileResponse = &fileInfo{}
+	endServer = false
 	srv *grpc.Server
 )
 
@@ -48,7 +49,7 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	fileResponse.PaymentAddress = in.GetPaymentAddress()
 
 	// Close the server
-	//srv.Stop()
+	endServer = true
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
@@ -79,6 +80,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
+
+	// create a goroutine to listen for closing the server 
+	go func() {
+		for {
+			if endServer {
+				srv.Stop()
+				break
+			}
+			// wait 1 second
+			time.Sleep(1 * time.Second)
+		}
+	}()
 
 	// create a new grpc server for the producer to reach out to me
 	srv = grpc.NewServer()
