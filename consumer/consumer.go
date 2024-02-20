@@ -18,9 +18,9 @@ import (
 var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
 	port = flag.Int("port", 50052, "The consumer service port")
-	fileResponse = &fileInfo{}
-	endServer = false
-	srv *grpc.Server
+	fileResponse = &fileInfo{} // this is the file info that the producer will send to me
+	endServer = false // this is a flag to close the server once the file info is received
+	srv *grpc.Server // this is the grpc server for the producer to reach out to me
 )
 
 type server struct {
@@ -48,7 +48,7 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	fileResponse.Token = in.GetToken()
 	fileResponse.PaymentAddress = in.GetPaymentAddress()
 
-	// Close the server
+	// Close the server 
 	endServer = true
 
 	// For now, just return an empty response
@@ -81,8 +81,10 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	// create a goroutine to listen for closing the server 
+	// create an async goroutine to listen for closing the server 
 	go func() {
+		// this will listen in the background for the endServer flag to be true
+		// once it is true, it will close the server
 		for {
 			if endServer {
 				srv.Stop()
