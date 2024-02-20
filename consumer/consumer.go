@@ -48,7 +48,7 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	fileResponse.PaymentAddress = in.GetPaymentAddress()
 
 	// Close the server
-	srv.Stop()
+	//srv.Stop()
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
