@@ -1,9 +1,23 @@
-# grpc server
+# gRPC Consumer / Producer
 
-to run
+To compile:
 ```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go get -u google.golang.org/grpc
-protoc --go_out=. --go-grpc_out=. example.proto
-go run main.go
+protoc --go_out=. --go-grpc_out=. peernode.proto
+```
+
+To run mock market server:
+```bash
+go run market/mock.go
+```
+
+To run producer:
+```bash
+go run producer/producer.go
+```
+
+To run consumer:
+```bash
+go run consumer/consumer.go
 ```

@@ -209,3 +209,4 @@ func file_example_proto_init() {
 	file_example_proto_goTypes = nil
 	file_example_proto_depIdxs = nil
 }
+
