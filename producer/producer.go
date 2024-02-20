@@ -21,12 +21,12 @@ var (
 
 const accessTokenLength = 32
 
-func generateAccessToken(length int, existingTokens map[string]bool) (string, error) {
+func generateAccessToken(existingTokens map[string]string) (string, error) {
 	for {
 		// number of bytes needed to represent the random string
-		numBytes := length / 4 * 3
-		if length%4 != 0 {
-			numBytes = (length/4 + 1) * 3
+		numBytes := accessTokenLength / 4 * 3
+		if accessTokenLength%4 != 0 {
+			numBytes = (accessTokenLength/4 + 1) * 3
 		}
 
 		// generate random bytes
@@ -39,7 +39,7 @@ func generateAccessToken(length int, existingTokens map[string]bool) (string, er
 		token := base64.URLEncoding.EncodeToString(bytes)
 
 		// Trim the string to the desired length
-		token = token[:length]
+		token = token[:accessTokenLength]
 
 		// Check if the token already exists
 		if _, exists := existingTokens[token]; !exists {
@@ -67,43 +67,41 @@ func main() {
 		log.Fatalf("could not get file requests from market server: %v", err)
 	}
 	log.Printf("File Requests from market server: %s", fileRequests.GetRequests())
-	
+
 	// loop through the file requests and send the file links to the consumer
 
 	// Create a map to store file addresses with their corresponding access tokens
 	fileTokenMap := make(map[string]string)
-	existingTokens := make(map[string]bool)
 
 	// Send file addresses to the consumer
-for _, fileAddress := range fileRequests.GetRequests() {
-	consumerURL := fileAddress.Ip + ":" + string(fileAddress.Port)
+	for _, fileAddress := range fileRequests.GetRequests() {
+		consumerURL := fileAddress.Ip + ":" + string(fileAddress.Port)
 
-	// Set up a connection to the consumer.
-	connConsumer, err := grpc.Dial(consumerURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("did not connect to consumer: %v", err)
-	}
-	defer connConsumer.Close()
-	consumerClient := pb.NewConsumerServiceClient(connConsumer)
+		// Set up a connection to the consumer.
+		connConsumer, err := grpc.Dial(consumerURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("did not connect to consumer: %v", err)
+		}
+		defer connConsumer.Close()
+		consumerClient := pb.NewConsumerServiceClient(connConsumer)
 
-	log.Printf("Connected to consumer: %s", consumerURL)
+		log.Printf("Connected to consumer: %s", consumerURL)
 
-    // Generate access token for each file
-    token, err := generateAccessToken(accessTokenLength)
-    if err != nil {
-        log.Printf("Error generating access token: %v", err)
-        continue
-    }
+		// Generate access token for each file
+		token, err := generateAccessToken(fileTokenMap)
+		if err != nil {
+			log.Printf("Error generating access token: %v", err)
+			continue
+		}
 
 		// Store file address and access token in the map
 		fileTokenMap[fileAddress.Ip] = token
-		existingTokens[token] = true
 
 		// Construct the file link object
 		fileLink := &pb.FileLink{
-			Link:            fileAddress.Ip,
-			Token:           token,
-			PaymentAddress:  "payment_address", // Placeholder for payment address
+			Link:           fileAddress.Ip,
+			Token:          token,
+			PaymentAddress: "payment_address", // Placeholder for payment address
 		}
 
 		// Send the file link to the consumer
