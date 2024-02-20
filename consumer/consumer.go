@@ -49,14 +49,14 @@ func main() {
 	log.Printf("Made file request!")
 
 	// now i open a grpc connection for the producer to reach out to me
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterConsumerServiceServer(s, &server{})
-	log.Printf("Market Server listening on port %d...\n", port)
+	log.Printf("Consumer Server listening on port %d...\n", *port)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
