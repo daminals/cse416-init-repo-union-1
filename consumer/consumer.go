@@ -80,6 +80,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
+	// create a new grpc server for the producer to reach out to me
 	srv = grpc.NewServer()
 	pb.RegisterConsumerServiceServer(srv, &server{})
 	log.Printf("Consumer Server listening on port %d...\n", *port)
@@ -99,11 +100,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error creating http request: %v", err)
 	}
+
+	// add the access token in the header
 	req.Header.Set("Authorization", fileResponse.Token)
+
+	// send the request
 	resp, err := netClient.Do(req)
 	if err != nil {
 		log.Fatalf("Error sending http request: %v", err)
 	}
+
 	// check if the response is 200 OK
 	if resp.StatusCode != http.StatusOK {
 		log.Fatalf("Error downloading file: %v", resp.Status)
