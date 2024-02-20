@@ -11,15 +11,23 @@ import (
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
+	port = flag.Int("port", 50052, "The consumer service port")
 )
 
 type server struct {
 	pb.UnimplementedConsumerServiceServer
 }
+
+func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
+	log.Printf("Received: %v", in)
+	return nil, nil
+}
+
 
 func main() {
 	flag.Parse()
@@ -31,19 +39,6 @@ func main() {
 	defer conn.Close()
 	c := pb.NewMarketServiceClient(conn)
 
-	// parse the port from the addr string
-	// _, port, err := net.SplitHostPort(*addr)
-	// if err != nil {
-	// 	log.Fatalf("Failed to parse port: %v", err)
-	// }
-	// // convert the port string to an int
-	// portInt, err := net.LookupPort("tcp", port)
-
-	// if err != nil {
-	// 	log.Fatalf("Failed to convert port to int: %v", err)
-	// }
-	portInt := 50052
-
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -54,14 +49,14 @@ func main() {
 	log.Printf("Made file request!")
 
 	// now i open a grpc connection for the producer to reach out to me
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", portInt))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterConsumerServiceServer(s, &server{})
-	log.Printf("Market Server listening on port %d...\n", portInt)
+	log.Printf("Market Server listening on port %d...\n", port)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
