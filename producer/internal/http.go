@@ -9,6 +9,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const ProducerAddr = "127.0.0.1:8080/file"
+
 func HandleFileRequest(writer http.ResponseWriter, request *http.Request) {
 	fileHash := mux.Vars(request)["fileHash"]
 	accessToken := request.Header.Get("Authorization")
@@ -54,13 +56,11 @@ func HandleFileRequest(writer http.ResponseWriter, request *http.Request) {
 	writer.Write(consumerJson)
 }
 
-func StartServer() (*http.Server, error) {
+func StartServer() {
 	server := &http.Server{Addr: ":8080"}
 
 	router := mux.NewRouter()
 	router.HandleFunc("/file/{fileHash}", HandleFileRequest).Methods("GET")
 	server.Handler = router
 	server.ListenAndServe()
-
-	return server, nil
 }
