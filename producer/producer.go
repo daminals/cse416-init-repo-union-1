@@ -19,29 +19,34 @@ var (
 	// consumerURL = flag.String("consumer-url", "localhost:50052", "placeholder URL")
 )
 
-// Access token length
 const accessTokenLength = 32
 
-func generateAccessToken(length int) (string, error) {
-	// Calculate the number of bytes needed to represent the random string
-	numBytes := length / 4 * 3
-	if length%4 != 0 {
-		numBytes = (length/4 + 1) * 3
+func generateAccessToken(length int, existingTokens map[string]bool) (string, error) {
+	for {
+		// number of bytes needed to represent the random string
+		numBytes := length / 4 * 3
+		if length%4 != 0 {
+			numBytes = (length/4 + 1) * 3
+		}
+
+		// generate random bytes
+		bytes := make([]byte, numBytes)
+		if _, err := rand.Read(bytes); err != nil {
+			return "", err
+		}
+
+		// Encode the random bytes to base64
+		token := base64.URLEncoding.EncodeToString(bytes)
+
+		// Trim the string to the desired length
+		token = token[:length]
+
+		// Check if the token already exists
+		if _, exists := existingTokens[token]; !exists {
+			// Token is unique, return it
+			return token, nil
+		}
 	}
-
-	// Generate random bytes
-	bytes := make([]byte, numBytes)
-	if _, err := rand.Read(bytes); err != nil {
-		return "", err
-	}
-
-	// Encode the random bytes to base64
-	token := base64.URLEncoding.EncodeToString(bytes)
-
-	// Trim the string to the desired length
-	token = token[:length]
-
-	return token, nil
 }
 
 func main() {
@@ -67,6 +72,7 @@ func main() {
 
 	// Create a map to store file addresses with their corresponding access tokens
 	fileTokenMap := make(map[string]string)
+	existingTokens := make(map[string]bool)
 
 	// Send file addresses to the consumer
 for _, fileAddress := range fileRequests.GetRequests() {
@@ -89,28 +95,29 @@ for _, fileAddress := range fileRequests.GetRequests() {
         continue
     }
 
-    // Store file address and access token in the map
-    fileTokenMap[fileAddress.Ip] = token
+		// Store file address and access token in the map
+		fileTokenMap[fileAddress.Ip] = token
+		existingTokens[token] = true
 
-    // Construct the file link object
-    fileLink := &pb.FileLink{
-        Link:            fileAddress.Ip,
-        Token:           token,
-        PaymentAddress:  "payment_address", // Placeholder for payment address
-    }
+		// Construct the file link object
+		fileLink := &pb.FileLink{
+			Link:            fileAddress.Ip,
+			Token:           token,
+			PaymentAddress:  "payment_address", // Placeholder for payment address
+		}
 
-    // Send the file link to the consumer
-    ctxConsumer, cancelConsumer := context.WithTimeout(context.Background(), time.Second)
-    defer cancelConsumer()
+		// Send the file link to the consumer
+		ctxConsumer, cancelConsumer := context.WithTimeout(context.Background(), time.Second)
 
-    // Send the file link object to the consumer
-    response, err := consumerClient.ReceiveFileInfo(ctxConsumer, fileLink)
-    if err != nil {
-        log.Printf("Failed to send file address to consumer: %v", err)
-        continue
-    }
-    log.Printf("Response from consumer for %s: %v", fileAddress.Ip, response)
-}
+		// Send the file link object to the consumer
+		response, err := consumerClient.ReceiveFileInfo(ctxConsumer, fileLink)
+		cancelConsumer() // Cancel context after the RPC call
+		if err != nil {
+			log.Printf("Failed to send file address to consumer: %v", err)
+			continue
+		}
+		log.Printf("Response from consumer for %s: %v", fileAddress.Ip, response)
+	}
 
 	// Print the fileTokenMap
 	log.Printf("File addresses with corresponding access tokens: %v", fileTokenMap)
