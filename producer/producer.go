@@ -68,12 +68,10 @@ func main() {
 	}
 	log.Printf("File Requests from market server: %s", fileRequests.GetRequests())
 
-	// loop through the file requests and send the file links to the consumer
-
 	// Create a map to store file addresses with their corresponding access tokens
 	fileTokenMap := make(map[string]string)
 
-	// Send file addresses to the consumer
+	// loop through the file requests and send the file links to the consumer
 	for _, fileAddress := range fileRequests.GetRequests() {
 		consumerURL := fileAddress.Ip + ":" + string(fileAddress.Port)
 
@@ -82,9 +80,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("did not connect to consumer: %v", err)
 		}
-		defer connConsumer.Close()
 		consumerClient := pb.NewConsumerServiceClient(connConsumer)
-
 		log.Printf("Connected to consumer: %s", consumerURL)
 
 		// Generate access token for each file
@@ -115,6 +111,8 @@ func main() {
 			continue
 		}
 		log.Printf("Response from consumer for %s: %v", fileAddress.Ip, response)
+		// Close the connection to the consumer
+		connConsumer.Close()
 	}
 
 	// Print the fileTokenMap
