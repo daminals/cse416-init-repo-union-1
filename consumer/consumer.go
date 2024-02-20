@@ -38,6 +38,12 @@ func (f *fileInfo) isComplete() bool {
 	return f.Link != "" && f.Token != "" && f.PaymentAddress != ""
 }
 
+// IsAlive is the function that the market will call to check if the consumer is alive
+func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
+	log.Printf("Received IsAlive: %v", in)
+	return &emptypb.Empty{}, nil
+}
+
 // RecieveFileInfo is the function that the producer will call to send the file info
 // afterwards, the consumer should close the server and make an http request to the producer
 // to download the file

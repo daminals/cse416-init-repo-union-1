@@ -20,6 +20,7 @@ service HealthService {
 
 service ConsumerService {
     rpc ReceiveFileInfo (FileLink) returns (google.protobuf.Empty) {};
+    rpc IsAlive (google.protobuf.Empty) returns (google.protobuf.Empty) {};
 }
 
 service MarketService {

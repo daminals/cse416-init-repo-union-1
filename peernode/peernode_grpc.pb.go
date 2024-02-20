@@ -110,6 +110,7 @@ var HealthService_ServiceDesc = grpc.ServiceDesc{
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ConsumerServiceClient interface {
 	ReceiveFileInfo(ctx context.Context, in *FileLink, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	IsAlive(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type consumerServiceClient struct {
@@ -129,11 +130,21 @@ func (c *consumerServiceClient) ReceiveFileInfo(ctx context.Context, in *FileLin
 	return out, nil
 }
 
+func (c *consumerServiceClient) IsAlive(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/peernode.ConsumerService/IsAlive", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ConsumerServiceServer is the server API for ConsumerService service.
 // All implementations must embed UnimplementedConsumerServiceServer
 // for forward compatibility
 type ConsumerServiceServer interface {
 	ReceiveFileInfo(context.Context, *FileLink) (*emptypb.Empty, error)
+	IsAlive(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	mustEmbedUnimplementedConsumerServiceServer()
 }
 
@@ -143,6 +154,9 @@ type UnimplementedConsumerServiceServer struct {
 
 func (UnimplementedConsumerServiceServer) ReceiveFileInfo(context.Context, *FileLink) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReceiveFileInfo not implemented")
+}
+func (UnimplementedConsumerServiceServer) IsAlive(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsAlive not implemented")
 }
 func (UnimplementedConsumerServiceServer) mustEmbedUnimplementedConsumerServiceServer() {}
 
@@ -175,6 +189,24 @@ func _ConsumerService_ReceiveFileInfo_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ConsumerService_IsAlive_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ConsumerServiceServer).IsAlive(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/peernode.ConsumerService/IsAlive",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ConsumerServiceServer).IsAlive(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ConsumerService_ServiceDesc is the grpc.ServiceDesc for ConsumerService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -185,6 +217,10 @@ var ConsumerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReceiveFileInfo",
 			Handler:    _ConsumerService_ReceiveFileInfo_Handler,
+		},
+		{
+			MethodName: "IsAlive",
+			Handler:    _ConsumerService_IsAlive_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
