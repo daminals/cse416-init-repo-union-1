@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-	port = flag.Int("port", 50052, "The consumer service port")
+	marketAddr         = flag.String("addr", "localhost:50051", "the address to connect to")
+	port         = flag.Int("port", 50052, "The consumer service port")
 	fileResponse = &fileInfo{} // this is the file info that the producer will send to me
-	endServer = false // this is a flag to close the server once the file info is received
-	srv *grpc.Server // this is the grpc server for the producer to reach out to me
+	endServer    = false       // this is a flag to close the server once the file info is received
+	srv          *grpc.Server  // this is the grpc server for the producer to reach out to me
 )
 
 type server struct {
@@ -48,28 +48,40 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	fileResponse.Token = in.GetToken()
 	fileResponse.PaymentAddress = in.GetPaymentAddress()
 
-	// Close the server 
+	// Close the server
 	endServer = true
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
 }
 
-
 func main() {
 	flag.Parse()
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(*marketAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
+		// this context dialer is used to specify the source ip address, so that the producer can reach out to me on the same port
+		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
+			dst, err := net.ResolveTCPAddr("tcp", addr)
+			// check if destination address is valid
+			if err != nil {
+					return nil, err
+			}
+			// create a specified source address
+			src := &net.TCPAddr{
+					IP:   net.ParseIP("127.0.0.1"), // this is the source ip address, change it to 0.0.0.0 in production
+					Port: *port,
+			}
+			return net.DialTCP("tcp", src, dst)
+	}))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	defer conn.Close()
-	c := pb.NewMarketServiceClient(conn)
+	marketConnection := pb.NewMarketServiceClient(conn)
 
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	_, err = c.AddFileRequest(ctx, &pb.FileHash{Hash: "hash"})
+	_, err = marketConnection.AddFileRequest(ctx, &pb.FileHash{Hash: "hash"})
 	if err != nil {
 		log.Fatalf("could not add file request: %v", err)
 	}
@@ -81,7 +93,11 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	// create an async goroutine to listen for closing the server 
+	// explicitly close the connection once file request is made
+	conn.Close()
+	// now can reuse same port to listen for the producer to connect
+
+	// create an async goroutine to listen for closing the server
 	go func() {
 		// this will listen in the background for the endServer flag to be true
 		// once it is true, it will close the server

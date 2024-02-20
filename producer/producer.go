@@ -8,6 +8,7 @@ import (
 
 	"crypto/rand"
 	"encoding/base64"
+	"strconv"
 
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode"
 	"google.golang.org/grpc"
@@ -16,10 +17,9 @@ import (
 
 var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-	// consumerURL = flag.String("consumer-url", "localhost:50052", "placeholder URL")
 )
 
-const accessTokenLength = 32
+const accessTokenLength = 32 // Length of the access token
 
 func generateAccessToken(existingTokens map[string]string) (string, error) {
 	for {
@@ -73,7 +73,8 @@ func main() {
 
 	// loop through the file requests and send the file links to the consumer
 	for _, fileAddress := range fileRequests.GetRequests() {
-		consumerURL := fileAddress.Ip + ":" + string(fileAddress.Port)
+		consumerURL := fileAddress.Ip + ":" + strconv.Itoa(int(fileAddress.Port))
+		log.Printf("Sending file address to consumer: %s", consumerURL)
 
 		// Set up a connection to the consumer.
 		connConsumer, err := grpc.Dial(consumerURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
