@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"time"
 
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode"
@@ -17,16 +18,37 @@ import (
 var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
 	port = flag.Int("port", 50052, "The consumer service port")
+	fileResponse = &fileInfo{}
+	srv *grpc.Server
 )
 
 type server struct {
-	pb.UnimplementedConsumerServiceServer
+	pb.UnimplementedConsumerServiceServer // this is the consumer service
 }
 
+type fileInfo struct {
+	Link           string // url to download the file
+	Token          string // access token to download the file
+	PaymentAddress string // payment address to send the payment
+}
+
+// implement a function in fileinfo to check if the file info is complete
+func (f *fileInfo) isComplete() bool {
+	return f.Link != "" && f.Token != "" && f.PaymentAddress != ""
+}
+
+// RecieveFileInfo is the function that the producer will call to send the file info
+// afterwards, the consumer should close the server and make an http request to the producer
+// to download the file
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
 	log.Printf("Received: %v", in)
 
-	// TODO: Implement the file transfer logic here
+	fileResponse.Link = in.GetLink()
+	fileResponse.Token = in.GetToken()
+	fileResponse.PaymentAddress = in.GetPaymentAddress()
+
+	// Close the server
+	srv.Stop()
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
@@ -58,10 +80,32 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
-	pb.RegisterConsumerServiceServer(s, &server{})
+	srv = grpc.NewServer()
+	pb.RegisterConsumerServiceServer(srv, &server{})
 	log.Printf("Consumer Server listening on port %d...\n", *port)
-	if err := s.Serve(lis); err != nil {
+	if err := srv.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
+	}
+
+	// check if the file info is complete
+	if !fileResponse.isComplete() {
+		// fatal crash if any of the file info is missing
+		log.Fatalf("File info is missing")
+	}
+
+	// send an http request to the producer to download the file
+	netClient := &http.Client{}
+	req, err := http.NewRequest("GET", fileResponse.Link, nil)
+	if err != nil {
+		log.Fatalf("Error creating http request: %v", err)
+	}
+	req.Header.Set("Authorization", fileResponse.Token)
+	resp, err := netClient.Do(req)
+	if err != nil {
+		log.Fatalf("Error sending http request: %v", err)
+	}
+	// check if the response is 200 OK
+	if resp.StatusCode != http.StatusOK {
+		log.Fatalf("Error downloading file: %v", resp.Status)
 	}
 }
