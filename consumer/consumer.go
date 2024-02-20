@@ -32,16 +32,17 @@ func main() {
 	c := pb.NewMarketServiceClient(conn)
 
 	// parse the port from the addr string
-	_, port, err := net.SplitHostPort(*addr)
-	if err != nil {
-		log.Fatalf("Failed to parse port: %v", err)
-	}
-	// convert the port string to an int
-	portInt, err := net.LookupPort("tcp", port)
+	// _, port, err := net.SplitHostPort(*addr)
+	// if err != nil {
+	// 	log.Fatalf("Failed to parse port: %v", err)
+	// }
+	// // convert the port string to an int
+	// portInt, err := net.LookupPort("tcp", port)
 
-	if err != nil {
-		log.Fatalf("Failed to convert port to int: %v", err)
-	}
+	// if err != nil {
+	// 	log.Fatalf("Failed to convert port to int: %v", err)
+	// }
+	portInt := 50052
 
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)

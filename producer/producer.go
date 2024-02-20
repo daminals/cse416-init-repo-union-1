@@ -16,7 +16,7 @@ import (
 
 var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-	consumerURL = flag.String("consumer-url", "localhost:50051", "placeholder URL")
+	consumerURL = flag.String("consumer-url", "localhost:50052", "placeholder URL")
 )
 
 // Access token length
