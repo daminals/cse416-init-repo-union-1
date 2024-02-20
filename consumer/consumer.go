@@ -25,7 +25,11 @@ type server struct {
 
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
 	log.Printf("Received: %v", in)
-	return nil, nil
+
+	// TODO: Implement the file transfer logic here
+
+	// For now, just return an empty response
+	return &emptypb.Empty{}, nil
 }
 
 

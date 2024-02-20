@@ -108,7 +108,6 @@ for _, fileAddress := range fileRequests.GetRequests() {
     log.Printf("Response from consumer for %s: %v", fileAddress.Ip, response)
 }
 
-
 	// Print the fileTokenMap
 	log.Printf("File addresses with corresponding access tokens: %v", fileTokenMap)
 }
