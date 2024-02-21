@@ -14,29 +14,26 @@ import (
 
 const ProducerWallet = "wallet_address"
 
-func GetFileRequests(marketServerAddr string) ([]*pb.FileRequest, error) {
+func GetFileRequests(marketServerAddr, hash string) ([]*pb.FileRequest, error) {
 	// Establish connection with the market server
-	log.Println("Connecting to market server...")
+	log.Printf("Connecting to market server at %s...", marketServerAddr)
 	connMarketServer, err := grpc.Dial(marketServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 		return nil, err
 	}
-	log.Println("Connected to market server!")
 	defer connMarketServer.Close()
 	clientMarketServer := pb.NewMarketServiceClient(connMarketServer)
 
 	// Contact the server and print out its response.
 	ctxMarketServer, cancelMarketServer := context.WithTimeout(context.Background(), time.Second)
 	defer cancelMarketServer()
-	log.Println("Getting file requests...")
-	resMarketServer, err := clientMarketServer.GetFileRequests(ctxMarketServer, &pb.FileHash{Hash: "hash"})
+	resMarketServer, err := clientMarketServer.GetFileRequests(ctxMarketServer, &pb.FileHash{Hash: hash})
 	if err != nil {
 		log.Fatalf("could not get file requests: %v", err)
 		return nil, err
 	}
-	log.Println("Got file requests!")
-	log.Printf("File Requests: %s", resMarketServer.GetRequests())
+	log.Printf("Received: file requests %s from market at %s", resMarketServer.GetRequests(), marketServerAddr)
 	return resMarketServer.GetRequests(), nil
 }
 
@@ -47,17 +44,15 @@ func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
 		log.Printf("Consumer not found: %s", consumerAddr)
 		return
 	}
-
 	// Set up a connection to the consumer.
 	fullConsumerAddr := fmt.Sprintf("%s:%d", consumerAddr, consumerPort)
+	log.Printf("Connecting to consumer server at %s...", fullConsumerAddr)
 	connConsumer, err := grpc.Dial(fullConsumerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect to consumer: %v", err)
 	}
 	defer connConsumer.Close()
 	clientConsumer := pb.NewConsumerServiceClient(connConsumer)
-
-	log.Printf("Connected to consumer: %s", fullConsumerAddr)
 
 	// Create the file link to be sent
 	fileLink := &pb.FileLink{
@@ -74,6 +69,5 @@ func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
 		log.Printf("Failed to send file address to consumer: %v", err)
 		return
 	}
-
-	log.Printf("Response from consumer for %s: %v", fileLink.Link, resConsumer)
+	log.Printf("Recieved: %v from consumer at %s", resConsumer, fullConsumerAddr)
 }

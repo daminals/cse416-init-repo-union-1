@@ -8,23 +8,23 @@ import (
 )
 
 const ConsumerAddr string = "127.0.0.1" // this is the source ip address, change it to 0.0.0.0 in production
-const ConsumerPort uint16 = 50052
+const ConsumerPort uint16 = 50052 		 // this is the source port, can be anything (should be recorded in market)
 
 func GetFile() ([]byte, error) {
 	// check if the file link is empty
-	if CurrentFileLink.Link == "" {
+	if CurrentFileLink.GetLink() == "" || CurrentFileLink.GetToken() == "" || CurrentFileLink.GetPaymentAddress() == "" {
 		return nil, fmt.Errorf("no file link present")
 	}
 
 	// send an http request to the producer to download the file
 	netClient := &http.Client{}
-	req, err := http.NewRequest("GET", CurrentFileLink.Link, nil)
+	req, err := http.NewRequest("GET", CurrentFileLink.GetLink(), nil)
 	if err != nil {
 		log.Fatalf("Error creating http request: %v", err)
 	}
 
 	// add the access token in the header
-	req.Header.Set("Authorization", "Bearer "+CurrentFileLink.Token)
+	req.Header.Set("Authorization", "Bearer "+CurrentFileLink.GetToken())
 
 	// send the request
 	res, err := netClient.Do(req)

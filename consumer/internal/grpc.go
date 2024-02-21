@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -27,14 +28,16 @@ var (
 // afterwards, the consumer should close the server and make an http request to the producer
 // to download the file
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
-	log.Printf("Received: %v", in)
+	// get the ip address of the producer
+	peerCtx, _ := peer.FromContext(ctx)
+	log.Printf("Received: %v from producer at %s", in, peerCtx.Addr.String())	
 
 	CurrentFileLink.Link = in.GetLink()
 	CurrentFileLink.Token = in.GetToken()
 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
 
 	// Close the server
-	defer serverConsumer.Stop()
+	// defer serverConsumer.Stop()
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
@@ -46,6 +49,7 @@ func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty
 
 func SendFileRequest(marketServerAddr string) error {
 	// Set up a connection to the server.
+	log.Printf("Connecting to market server at %s...", marketServerAddr)
 	connMarketServer, err := grpc.Dial(marketServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		// this context dialer is used to specify the source ip address, so that the producer can reach out to me on the same port
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
@@ -66,17 +70,17 @@ func SendFileRequest(marketServerAddr string) error {
 		log.Fatalf("did not connect: %v", err)
 		return err
 	}
-	defer connMarketServer.Close()
 	clientMarketServer := pb.NewMarketServiceClient(connMarketServer)
+	defer connMarketServer.Close() // close connection after function ends
 
 	// Contact the server and print out its response.
 	ctxMarketServer, cancelMarketServer := context.WithTimeout(context.Background(), time.Second)
-	defer cancelMarketServer()
+	defer cancelMarketServer() // cancel the context after function ends
 	_, err = clientMarketServer.AddFileRequest(ctxMarketServer, &pb.FileHash{Hash: "hash"})
 	if err != nil {
 		log.Fatalf("could not add file request: %v", err)
 	}
-	log.Printf("Made file request!")
+	log.Printf("Sent: file request to market server at %s", marketServerAddr)
 	return nil
 }
 
