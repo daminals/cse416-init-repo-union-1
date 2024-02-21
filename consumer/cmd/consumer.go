@@ -1,28 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"flag"
 	"log"
-	"net/http"
+
+	"github.com/daminals/cse416-init-repo-union-1/consumer/internal"
 )
 
-// var (
-// 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-// )
+var (
+	marketServerAddr = flag.String("market-server-address", "127.0.0.1:50051", "the address to connect to")
+)
 
 func main() {
-	res, err := http.Get("http://127.0.0.1:8080/file/1234")
+	flag.Parse()
+
+	err := internal.SendFileRequest(*marketServerAddr)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to send file request: %v", err)
 	}
 
-	defer res.Body.Close()
+	// Start gRPC server
+	internal.StartListener()
 
-	responseBody, err := io.ReadAll(res.Body)
+	// Send an http request to the producer to download the file
+	file, err := internal.GetFile()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to get file: %v", err)
 	}
 
-	fmt.Println(string(responseBody))
+	// Print the file
+	log.Printf("File: %s", string(file))
 }
