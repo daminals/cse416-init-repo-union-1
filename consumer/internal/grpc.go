@@ -37,9 +37,13 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
 
 	// Close the server
-	serverConsumer.Stop()
+	defer serverConsumer.Stop()
 
 	// For now, just return an empty response
+	return &emptypb.Empty{}, nil
+}
+
+func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
 	return &emptypb.Empty{}, nil
 }
 
