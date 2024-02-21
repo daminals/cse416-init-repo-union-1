@@ -24,20 +24,20 @@ func HandleFileRequest(writer http.ResponseWriter, request *http.Request) {
 	requestInfo, ok := AccessTokens[accessToken]
 	if !ok {
 		writer.WriteHeader(http.StatusUnauthorized)
-		log.Printf("Consumer (%s) provided invalid access token: %s", request.RemoteAddr, accessToken)
+		log.Printf("Error: Consumer (%s) provided invalid access token %s", request.RemoteAddr, accessToken)
 		return
 	}
 
 	// Placeholder for the file chunk
 	writer.Write([]byte("File Chunk of " + fileHash))
 	requestInfo.NumSentChunks++
-	log.Printf("Consumer (%s) has been sent file chunk %d of %s", request.RemoteAddr, requestInfo.NumSentChunks, fileHash)
+	log.Printf("Sent: file chunk %d of %s to consumer at %s", requestInfo.NumSentChunks, fileHash, request.RemoteAddr)
 
 	// Generate a new access token to be used for the next request
 	delete(AccessTokens, accessToken)
 	newAccessToken := GenerateAccessToken()
 	AccessTokens[newAccessToken] = requestInfo
-	log.Printf("Consumer (%s) has been given new access token: %s", request.RemoteAddr, newAccessToken)
+	log.Printf("Sent: new access token (%s) to consumer at %s", newAccessToken, request.RemoteAddr)
 }
 
 func StartServer() {
