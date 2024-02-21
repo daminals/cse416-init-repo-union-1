@@ -66,23 +66,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not get file requests from market server: %v", err)
 	}
-	log.Printf("File Requests from market server: %s", fileRequests.GetRequests())
+	log.Printf("Received: file requests from market server: %s", fileRequests.GetRequests())
 
 	// Create a map to store file addresses with their corresponding access tokens
 	fileTokenMap := make(map[string]string)
 
 	// loop through the file requests and send the file links to the consumer
 	for _, fileAddress := range fileRequests.GetRequests() {
-		consumerURL := fileAddress.Ip + ":" + strconv.Itoa(int(fileAddress.Port))
-		log.Printf("Sending file address to consumer: %s", consumerURL)
+		consumerAddr := fileAddress.Ip + ":" + strconv.Itoa(int(fileAddress.Port))
+		log.Printf("Sent: file address to consumer at %s", consumerAddr)
 
 		// Set up a connection to the consumer.
-		connConsumer, err := grpc.Dial(consumerURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		connConsumer, err := grpc.Dial(consumerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("did not connect to consumer: %v", err)
 		}
 		consumerClient := pb.NewConsumerServiceClient(connConsumer)
-		log.Printf("Connected to consumer: %s", consumerURL)
 
 		// Generate access token for each file
 		token, err := generateAccessToken(fileTokenMap)
@@ -111,11 +110,11 @@ func main() {
 			log.Printf("Failed to send file address to consumer: %v", err)
 			continue
 		}
-		log.Printf("Response from consumer for %s: %v", fileAddress.Ip, response)
+		log.Printf("Recieved: %v from %s", response, fileAddress.Ip)
 		// Close the connection to the consumer
 		connConsumer.Close()
 	}
 
 	// Print the fileTokenMap
-	log.Printf("File addresses with corresponding access tokens: %v", fileTokenMap)
+	// log.Printf("File addresses with corresponding access tokens: %v", fileTokenMap)
 }

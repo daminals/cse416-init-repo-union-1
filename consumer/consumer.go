@@ -12,6 +12,7 @@ import (
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/peer"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -48,7 +49,9 @@ func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty
 // afterwards, the consumer should close the server and make an http request to the producer
 // to download the file
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
-	log.Printf("Received: %v", in)
+	// get the ip address of the producer
+	peerCtx, _ := peer.FromContext(ctx)
+	log.Printf("Received: %v from %s", in, peerCtx.Addr.String())
 
 	fileResponse.Link = in.GetLink()
 	fileResponse.Token = in.GetToken()
@@ -91,7 +94,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not add file request: %v", err)
 	}
-	log.Printf("Made file request!")
+	log.Printf("Sent: file request to market server at %s", *marketAddr)
 
 	// now i open a grpc connection for the producer to reach out to me
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
