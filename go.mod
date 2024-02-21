@@ -3,6 +3,7 @@ module github.com/daminals/cse416-init-repo-union-1
 go 1.21.5
 
 require (
+	github.com/gorilla/mux v1.8.1
 	google.golang.org/grpc v1.61.1
 	google.golang.org/protobuf v1.32.0
 )
