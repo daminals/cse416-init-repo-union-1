@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
+	marketAddr = flag.String("addr", "localhost:50051", "the address to connect to")
 )
 
 const accessTokenLength = 32 // Length of the access token
@@ -52,7 +52,7 @@ func generateAccessToken(existingTokens map[string]string) (string, error) {
 func main() {
 	flag.Parse()
 	// Set up a connection to the market server.
-	connMarket, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connMarket, err := grpc.Dial(*marketAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect to market server: %v", err)
 	}
@@ -66,7 +66,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not get file requests from market server: %v", err)
 	}
-	log.Printf("Received: file requests from market server: %s", fileRequests.GetRequests())
+	log.Printf("Received: file requests %s from market at %s", fileRequests.GetRequests(), *marketAddr)
 
 	// Create a map to store file addresses with their corresponding access tokens
 	fileTokenMap := make(map[string]string)
@@ -110,7 +110,7 @@ func main() {
 			log.Printf("Failed to send file address to consumer: %v", err)
 			continue
 		}
-		log.Printf("Recieved: %v from %s", response, fileAddress.Ip)
+		log.Printf("Recieved: %v from consumer at %s", response, fileAddress.Ip)
 		// Close the connection to the consumer
 		connConsumer.Close()
 	}

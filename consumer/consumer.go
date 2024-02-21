@@ -51,7 +51,7 @@ func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
 	// get the ip address of the producer
 	peerCtx, _ := peer.FromContext(ctx)
-	log.Printf("Received: %v from %s", in, peerCtx.Addr.String())
+	log.Printf("Received: %v from producer at %s", in, peerCtx.Addr.String())
 
 	fileResponse.Link = in.GetLink()
 	fileResponse.Token = in.GetToken()

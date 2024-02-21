@@ -32,7 +32,7 @@ var fileRequestList = []FileRequest{
 
 func (s *server) AddFileRequest(ctx context.Context, in *pb.FileHash) (*emptypb.Empty, error) {
 	peerCtx, _ := peer.FromContext(ctx)
-	log.Printf("Received: %v, From: %v", in.GetHash(), peerCtx.Addr.String())
+	log.Printf("Received: %v from consumer at %v", in.GetHash(), peerCtx.Addr.String())
 	return &emptypb.Empty{}, nil
 }
 
