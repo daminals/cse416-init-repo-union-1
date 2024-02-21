@@ -14,7 +14,7 @@ import (
 
 const ProducerWallet = "wallet_address"
 
-func GetFileRequests(marketServerAddr string) ([]*pb.FileRequest, error) {
+func GetFileRequests(marketServerAddr, hash string) ([]*pb.FileRequest, error) {
 	// Establish connection with the market server
 	log.Println("Connecting to market server...")
 	connMarketServer, err := grpc.Dial(marketServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -30,7 +30,7 @@ func GetFileRequests(marketServerAddr string) ([]*pb.FileRequest, error) {
 	ctxMarketServer, cancelMarketServer := context.WithTimeout(context.Background(), time.Second)
 	defer cancelMarketServer()
 	log.Println("Getting file requests...")
-	resMarketServer, err := clientMarketServer.GetFileRequests(ctxMarketServer, &pb.FileHash{Hash: "hash"})
+	resMarketServer, err := clientMarketServer.GetFileRequests(ctxMarketServer, &pb.FileHash{Hash: hash})
 	if err != nil {
 		log.Fatalf("could not get file requests: %v", err)
 		return nil, err

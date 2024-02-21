@@ -16,8 +16,10 @@ func main() {
 	// Starts the HTTP server on another process
 	go internal.StartServer()
 
+	hash := "hash" // could be any hash i have
+
 	// Set up a connection to the market server check for file requests
-	fileRequests, err := internal.GetFileRequests(*marketServerAddr)
+	fileRequests, err := internal.GetFileRequests(*marketServerAddr, hash)
 	if err != nil {
 		panic(err)
 	}
@@ -27,11 +29,11 @@ func main() {
 		internal.FileRequests[fileRequest.GetIp()] = &internal.Consumer{
 			IPAddress:          fileRequest.GetIp(),
 			NextAccessToken:    internal.GenerateAccessToken(),
-			RequestedFileHash:  "123", // Should be provided by the market server
+			RequestedFileHash:  hash, // Should be provided by the market server
 			NumReceievedChunks: 0,
 		}
 
-		internal.SendFileLink(fileRequest.GetIp(), uint16(fileRequest.GetPort()), "123") // Should be provided by the market server
+		internal.SendFileLink(fileRequest.GetIp(), uint16(fileRequest.GetPort()), hash) // Should be provided by the market server
 	}
 
 	// Adds localhost as a consumer for testing

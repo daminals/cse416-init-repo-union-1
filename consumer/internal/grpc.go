@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -27,7 +28,9 @@ var (
 // afterwards, the consumer should close the server and make an http request to the producer
 // to download the file
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
-	log.Printf("Received: %v", in)
+	// get the ip address of the producer
+	peerCtx, _ := peer.FromContext(ctx)
+	log.Printf("Received: %v from producer at %s", in, peerCtx.Addr.String())	
 
 	CurrentFileLink.Link = in.GetLink()
 	CurrentFileLink.Token = in.GetToken()
@@ -62,7 +65,6 @@ func SendFileRequest(marketServerAddr string) error {
 		log.Fatalf("did not connect: %v", err)
 		return err
 	}
-	defer connMarketServer.Close()
 	clientMarketServer := pb.NewMarketServiceClient(connMarketServer)
 
 	// Contact the server and print out its response.
@@ -72,7 +74,10 @@ func SendFileRequest(marketServerAddr string) error {
 	if err != nil {
 		log.Fatalf("could not add file request: %v", err)
 	}
-	log.Printf("Made file request!")
+	log.Printf("Sent: file request to market server at %s", marketServerAddr)
+	// explicitly close the connection once file request is made
+	connMarketServer.Close()
+	// now can reuse same port to listen for the producer to connect
 	return nil
 }
 
