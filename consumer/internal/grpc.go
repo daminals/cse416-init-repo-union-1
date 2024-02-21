@@ -22,7 +22,10 @@ type server struct {
 var (
 	CurrentFileLink *pb.FileLink = &pb.FileLink{}
 	serverConsumer  *grpc.Server = nil
+	shutdownConsumerSignal chan struct{} = make(chan struct{})
 )
+ 
+// Define a channel to signal server shutdown
 
 // RecieveFileInfo is the function that the producer will call to send the file info
 // afterwards, the consumer should close the server and make an http request to the producer
@@ -36,8 +39,12 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	CurrentFileLink.Token = in.GetToken()
 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
 
-	// Close the server
-	defer serverConsumer.Stop()
+	// Close the server gracefully
+	go func() {
+		log.Println("Closing consumer server gracefully...")
+		// send a signal to the server to shut down
+		close(shutdownConsumerSignal)
+	}()
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
@@ -95,7 +102,18 @@ func StartListener() {
 	serverConsumer = grpc.NewServer()
 	pb.RegisterConsumerServiceServer(serverConsumer, &server{})
 	log.Printf("Consumer Server listening on port %s...\n", listener.Addr().String())
-	if err := serverConsumer.Serve(listener); err != nil {
-		log.Fatalf("Failed to serve: %v", err)
-	}
+
+	// Serve the gRPC server in a separate goroutine
+	go func() {
+		if err := serverConsumer.Serve(listener); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+
+	// Wait for shutdown signal
+	<-shutdownConsumerSignal
+
+	// Stop the gRPC server gracefully
+	serverConsumer.GracefulStop()
+
 }
