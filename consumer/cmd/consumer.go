@@ -32,5 +32,5 @@ func main() {
 	}
 
 	// Print the file
-	log.Printf("File: %s", string(file))
+	log.Printf("Recieved: File %s", string(file))
 }
