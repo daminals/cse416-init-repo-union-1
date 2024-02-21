@@ -1,5 +1,8 @@
 # gRPC Consumer / Producer
+## Bootstrap by team: Portugese Man O' War
+Alexander Snit, Daniel Kogan, Dylan Scott, Gretta Halollari
 
+### Running the code
 To compile:
 ```bash
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
