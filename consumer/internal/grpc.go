@@ -49,6 +49,7 @@ func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty
 
 func SendFileRequest(marketServerAddr string) error {
 	// Set up a connection to the server.
+	log.Printf("Connecting to market server at %s...", marketServerAddr)
 	connMarketServer, err := grpc.Dial(marketServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
 		// this context dialer is used to specify the source ip address, so that the producer can reach out to me on the same port
 		grpc.WithContextDialer(func(ctx context.Context, addr string) (net.Conn, error) {
