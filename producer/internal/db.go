@@ -5,14 +5,12 @@ import (
 	"math/big"
 )
 
-type Consumer struct {
-	NumReceievedChunks uint16
-	IPAddress          string
-	RequestedFileHash  string
-	NextAccessToken    string
+type ConsumerRequestInfo struct {
+	RequestedFileURL string
+	NumSentChunks    uint16
 }
 
-var FileRequests = make(map[string]*Consumer)
+var AccessTokens = make(map[string]*ConsumerRequestInfo)
 
 func GenerateAccessToken() string {
 	chars := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-+=@#")
