@@ -6,24 +6,31 @@
 run_client() {
     client_name=$1
     client_path=$2
+    color_code=$3
 
     # Run client and capture output
-    echo "$client_name Client:"
-    go run "$client_path" 2>&1 | sed "s/^/$client_name: /" &
+    go run "$client_path" 2>&1 | sed "s/^/${esc}${color_code}${client_name}:${reset} /" &
 }
 
+# ANSI color escape codes
+esc=$(printf '\033')
+red="${esc}[0;31m"
+green="${esc}[0;32m"
+yellow="${esc}[0;33m"
+reset="${esc}[0m"
+
 # Run market client
-run_client "Market" "market/mock.go"
+run_client "Market" "market/mock.go" "${red}"
 
 sleep 5
 
 # Run consumer client
-run_client "Consumer" "consumer/consumer.go"
+run_client "Consumer" "consumer/consumer.go" "${green}"
 
 sleep 5
 
 # Run producer client
-run_client "Producer" "producer/producer.go"
+run_client "Producer" "producer/producer.go" "${yellow}"
 
 # Wait for all clients to finish
 wait
