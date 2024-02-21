@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode"
@@ -22,6 +23,7 @@ type server struct {
 var (
 	CurrentFileLink *pb.FileLink = &pb.FileLink{}
 	serverConsumer  *grpc.Server = nil
+	FileReceived    sync.WaitGroup
 )
 
 // RecieveFileInfo is the function that the producer will call to send the file info
@@ -36,10 +38,8 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	CurrentFileLink.Token = in.GetToken()
 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
 
-	// Close the server
-	defer serverConsumer.Stop()
-
 	// For now, just return an empty response
+	FileReceived.Done()
 	return &emptypb.Empty{}, nil
 }
 
@@ -98,4 +98,8 @@ func StartListener() {
 	if err := serverConsumer.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
+}
+
+func StopListener() {
+	serverConsumer.GracefulStop()
 }

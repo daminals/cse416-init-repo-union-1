@@ -63,11 +63,12 @@ func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
 	}
 
 	// Send the file link to the consumer
-	ctxConsumer, cancelConsumer := context.WithTimeout(context.Background(), time.Second)
+	ctxConsumer, cancelConsumer := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelConsumer()
 	resConsumer, err := clientConsumer.ReceiveFileInfo(ctxConsumer, fileLink)
 	if err != nil {
 		log.Printf("Failed to send file address to consumer: %v", err)
+		log.Printf("Consumer response: %v", resConsumer)
 		return
 	}
 	log.Printf("Recieved: %v from consumer at %s", resConsumer, fullConsumerAddr)

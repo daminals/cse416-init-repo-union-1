@@ -20,9 +20,12 @@ func main() {
 	}
 
 	// Start gRPC server
-	internal.StartListener()
+	internal.FileReceived.Add(1)
+	go internal.StartListener()
 
 	// Send an http request to the producer to download the file
+	internal.FileReceived.Wait()
+	internal.StopListener()
 	file, err := internal.GetFile()
 	if err != nil {
 		log.Fatalf("Failed to get file: %v", err)
