@@ -30,14 +30,14 @@ var (
 func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
 	// get the ip address of the producer
 	peerCtx, _ := peer.FromContext(ctx)
-	log.Printf("Received: %v from producer at %s", in, peerCtx.Addr.String())	
+	log.Printf("Received: %v from producer at %s", in, peerCtx.Addr.String())
 
 	CurrentFileLink.Link = in.GetLink()
 	CurrentFileLink.Token = in.GetToken()
 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
 
 	// Close the server
-	// defer serverConsumer.Stop()
+	defer serverConsumer.Stop()
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil

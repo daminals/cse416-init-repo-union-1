@@ -2,19 +2,28 @@ package main
 
 import (
 	"flag"
+	"sync"
 
 	"github.com/daminals/cse416-init-repo-union-1/producer/internal"
 )
 
 var (
 	marketServerAddr = flag.String("market-server-address", "127.0.0.1:50051", "the address to connect to")
+	wg               sync.WaitGroup
 )
 
 func main() {
 	flag.Parse()
 
+	// Add the sample hash
+	internal.FileHashes["hash"] = true
+
 	// Starts the HTTP server on another process
-	go internal.StartServer()
+	wg.Add(1)
+	go func() {
+		internal.StartServer()
+		wg.Done()
+	}()
 
 	// Set up a connection to the market server check for file requests for each file hash
 	for fileHash := range internal.FileHashes {
@@ -34,4 +43,6 @@ func main() {
 		RequestedFileHash: "file123Hash456",
 		NumSentChunks:     0,
 	}
+
+	wg.Wait()
 }
