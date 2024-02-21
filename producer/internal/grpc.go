@@ -47,7 +47,6 @@ func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
 		log.Printf("Consumer not found: %s", consumerAddr)
 		return
 	}
-
 	// Set up a connection to the consumer.
 	fullConsumerAddr := fmt.Sprintf("%s:%d", consumerAddr, consumerPort)
 	connConsumer, err := grpc.Dial(fullConsumerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -74,6 +73,5 @@ func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
 		log.Printf("Failed to send file address to consumer: %v", err)
 		return
 	}
-
-	log.Printf("Response from consumer for %s: %v", fileLink.Link, resConsumer)
+	log.Printf("Recieved: %v from consumer at %s", resConsumer, fullConsumerAddr)
 }
