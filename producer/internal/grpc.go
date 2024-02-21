@@ -14,7 +14,7 @@ import (
 
 const ProducerWallet = "wallet_address"
 
-func GetFileRequests(marketServerAddr, hash string) ([]*pb.FileRequest, error) {
+func GetFileRequests(marketServerAddr, fileHash string) ([]*pb.FileRequest, error) {
 	// Establish connection with the market server
 	log.Printf("Connecting to market server at %s...", marketServerAddr)
 	connMarketServer, err := grpc.Dial(marketServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -28,7 +28,7 @@ func GetFileRequests(marketServerAddr, hash string) ([]*pb.FileRequest, error) {
 	// Contact the server and print out its response.
 	ctxMarketServer, cancelMarketServer := context.WithTimeout(context.Background(), time.Second)
 	defer cancelMarketServer()
-	resMarketServer, err := clientMarketServer.GetFileRequests(ctxMarketServer, &pb.FileHash{Hash: hash})
+	resMarketServer, err := clientMarketServer.GetFileRequests(ctxMarketServer, &pb.FileHash{Hash: fileHash})
 	if err != nil {
 		log.Fatalf("could not get file requests: %v", err)
 		return nil, err
@@ -38,12 +38,6 @@ func GetFileRequests(marketServerAddr, hash string) ([]*pb.FileRequest, error) {
 }
 
 func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
-	// Get the consumer info
-	consumer, ok := FileRequests[consumerAddr]
-	if !ok {
-		log.Printf("Consumer not found: %s", consumerAddr)
-		return
-	}
 	// Set up a connection to the consumer.
 	fullConsumerAddr := fmt.Sprintf("%s:%d", consumerAddr, consumerPort)
 	log.Printf("Connecting to consumer server at %s...", fullConsumerAddr)
@@ -54,10 +48,17 @@ func SendFileLink(consumerAddr string, consumerPort uint16, fileHash string) {
 	defer connConsumer.Close()
 	clientConsumer := pb.NewConsumerServiceClient(connConsumer)
 
+	// Generate access token for the file and store it
+	accessToken := GenerateAccessToken()
+	AccessTokens[accessToken] = &ConsumerRequestInfo{
+		RequestedFileHash: fileHash,
+		NumSentChunks:     0,
+	}
+
 	// Create the file link to be sent
 	fileLink := &pb.FileLink{
 		Link:           fmt.Sprintf("%s/%s", ProducerAddr, fileHash),
-		Token:          consumer.NextAccessToken,
+		Token:          accessToken,
 		PaymentAddress: ProducerWallet,
 	}
 

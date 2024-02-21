@@ -16,31 +16,22 @@ func main() {
 	// Starts the HTTP server on another process
 	go internal.StartServer()
 
-	hash := "hash" // could be any hash i have
-
-	// Set up a connection to the market server check for file requests
-	fileRequests, err := internal.GetFileRequests(*marketServerAddr, hash)
-	if err != nil {
-		panic(err)
-	}
-
-	// Send the file link to each consumer
-	for _, fileRequest := range fileRequests {
-		internal.FileRequests[fileRequest.GetIp()] = &internal.Consumer{
-			IPAddress:          fileRequest.GetIp(),
-			NextAccessToken:    internal.GenerateAccessToken(),
-			RequestedFileHash:  hash, // Should be provided by the market server
-			NumReceievedChunks: 0,
+	// Set up a connection to the market server check for file requests for each file hash
+	for fileHash := range internal.FileHashes {
+		fileRequests, err := internal.GetFileRequests(*marketServerAddr, fileHash)
+		if err != nil {
+			panic(err)
 		}
 
-		internal.SendFileLink(fileRequest.GetIp(), uint16(fileRequest.GetPort()), hash) // Should be provided by the market server
+		// Send the file link to each consumer requesting the file
+		for _, fileRequest := range fileRequests {
+			internal.SendFileLink(fileRequest.GetIp(), uint16(fileRequest.GetPort()), fileHash)
+		}
 	}
 
-	// Adds localhost as a consumer for testing
-	internal.FileRequests["127.0.0.1"] = &internal.Consumer{
-		IPAddress:          "127.0.0.1",
-		NextAccessToken:    internal.GenerateAccessToken(),
-		RequestedFileHash:  "123", // Should be provided by the market server
-		NumReceievedChunks: 0,
+	// Adds a sample access token for testing
+	internal.AccessTokens["123"] = &internal.ConsumerRequestInfo{
+		RequestedFileHash: "file123Hash456",
+		NumSentChunks:     0,
 	}
 }
