@@ -37,7 +37,7 @@ func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb
 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
 
 	// Close the server
-	defer serverConsumer.Stop()
+	// defer serverConsumer.Stop()
 
 	// For now, just return an empty response
 	return &emptypb.Empty{}, nil
@@ -70,18 +70,16 @@ func SendFileRequest(marketServerAddr string) error {
 		return err
 	}
 	clientMarketServer := pb.NewMarketServiceClient(connMarketServer)
+	defer connMarketServer.Close() // close connection after function ends
 
 	// Contact the server and print out its response.
 	ctxMarketServer, cancelMarketServer := context.WithTimeout(context.Background(), time.Second)
-	defer cancelMarketServer()
+	defer cancelMarketServer() // cancel the context after function ends
 	_, err = clientMarketServer.AddFileRequest(ctxMarketServer, &pb.FileHash{Hash: "hash"})
 	if err != nil {
 		log.Fatalf("could not add file request: %v", err)
 	}
 	log.Printf("Sent: file request to market server at %s", marketServerAddr)
-	// explicitly close the connection once file request is made
-	connMarketServer.Close()
-	// now can reuse same port to listen for the producer to connect
 	return nil
 }
 
