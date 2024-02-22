@@ -9,7 +9,6 @@ import (
 
 	pb "github.com/daminals/cse416-init-repo-union-1/peernode" // Replace "your-package-path" with the actual package path
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -21,31 +20,52 @@ type server struct {
 	pb.UnimplementedMarketServiceServer
 }
 
-type FileRequest struct {
-	ip   string
-	port int
+type FileProducer struct {
+	Link           string
+	Price          float32
+	PaymentAddress string
 }
 
-var fileRequestList = []FileRequest{
-	{"127.0.0.1", 50052},
-}
+var fileProducerMap = make(map[string][]FileProducer)
 
-func (s *server) AddFileRequest(ctx context.Context, in *pb.FileHash) (*emptypb.Empty, error) {
-	peerCtx, _ := peer.FromContext(ctx)
-	log.Printf("Received: %v from consumer at %v", in.GetHash(), peerCtx.Addr.String())
+func (s *server) AddProducer(ctx context.Context, in *pb.FileProducer) (*emptypb.Empty, error) {
+	log.Printf("AddProducer for file hash: %s", in.Hash)
+
+	// Add the producer to the map
+	producer := FileProducer{
+		Link:           in.Link,
+		Price:          in.Price,
+		PaymentAddress: in.PaymentAddress,
+	}
+	existingProducers, ok := fileProducerMap[in.Hash]
+	if !ok {
+		fileProducerMap[in.Hash] = []FileProducer{producer}
+	} else {
+		fileProducerMap[in.Hash] = append(existingProducers, producer)
+	}
+
 	return &emptypb.Empty{}, nil
 }
 
-func (s *server) GetFileRequests(ctx context.Context, in *pb.FileHash) (*pb.FileRequestList, error) {
-	log.Printf("Received: %v", in.GetHash())
-	var requests []*pb.FileRequest
-	for _, req := range fileRequestList {
-		requests = append(requests, &pb.FileRequest{
-			Ip:   req.ip,
-			Port: int32(req.port),
-		})
+func (s *server) GetProducers(ctx context.Context, in *pb.FileHash) (*pb.FileProducerList, error) {
+	log.Printf("GetProducers for file hash: %s", in.Hash)
+
+	producers, ok := fileProducerMap[in.Hash]
+	if !ok {
+		return &pb.FileProducerList{}, nil
+	} else {
+		pbProducers := make([]*pb.FileProducer, len(producers))
+		for i, producer := range producers {
+			pbProducers[i] = &pb.FileProducer{
+				Hash:           in.Hash,
+				Link:           producer.Link,
+				Price:          producer.Price,
+				PaymentAddress: producer.PaymentAddress,
+			}
+		}
+		return &pb.FileProducerList{Producers: pbProducers}, nil
+
 	}
-	return &pb.FileRequestList{Requests: requests}, nil
 }
 
 func main() {
@@ -61,5 +81,3 @@ func main() {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 }
-
-// protoc --go_out=. --go-grpc_out=. example.proto
