@@ -23,25 +23,6 @@ var (
 	serverConsumer  *grpc.Server = nil
 )
 
-// RecieveFileInfo is the function that the producer will call to send the file info
-// afterwards, the consumer should close the server and make an http request to the producer
-// to download the file
-// func (s *server) ReceiveFileInfo(ctx context.Context, in *pb.FileLink) (*emptypb.Empty, error) {
-// 	// get the ip address of the producer
-// 	peerCtx, _ := peer.FromContext(ctx)
-// 	log.Printf("Received: %v from producer at %s", in, peerCtx.Addr.String())
-
-// 	CurrentFileLink.Link = in.GetLink()
-// 	CurrentFileLink.Token = in.GetToken()
-// 	CurrentFileLink.PaymentAddress = in.GetPaymentAddress()
-
-// 	return &emptypb.Empty{}, nil
-// }
-
-// func (s *server) IsAlive(ctx context.Context, in *emptypb.Empty) (*emptypb.Empty, error) {
-// 	return &emptypb.Empty{}, nil
-// }
-
 func SendFileRequest(marketServerAddr string) error {
 	// Set up a connection to the server.
 	log.Printf("Connecting to market server at %s...", marketServerAddr)

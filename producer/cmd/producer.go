@@ -25,18 +25,22 @@ func main() {
 		wg.Done()
 	}()
 
-	// Set up a connection to the market server and add name to the list of producers per hash
+	// Set up a connection to the market server
+	err := internal.StartMarketServerConnection(*marketServerAddr)
+	if err != nil {
+		panic(err)
+	}
+
+	// Add my name to the list of producers per hash
 	for fileHash := range internal.FileHashes {
-		fileRequests, err := internal.GetFileRequests(*marketServerAddr, fileHash)
+		err := internal.EnrollProducer(*marketServerAddr, fileHash)
 		if err != nil {
 			panic(err)
 		}
-
-		// // Send the file link to each consumer requesting the file
-		// for _, fileRequest := range fileRequests {
-		// 	internal.SendFileLink(fileRequest.GetIp(), uint16(fileRequest.GetPort()), fileHash)
-		// }
 	}
+
+	// Close the connection to the market server
+	internal.CloseMarketServerConnection(*marketServerAddr)
 
 	// Adds a sample access token for testing
 	internal.AccessTokens["123"] = &internal.ConsumerRequestInfo{
