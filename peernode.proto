@@ -5,35 +5,35 @@ import "google/protobuf/empty.proto";
 package peernode;
 option go_package = "./peernode";
 
-service HealthService {
-    rpc SayHello (HelloRequest) returns (HelloResponse);
+/*service ProducerService {
+    rpc GetFileLink (FileHash) returns (FileLink) {};
 }
 
-service ConsumerService {
-    rpc ReceiveFileInfo (FileLink) returns (google.protobuf.Empty) {};
-    rpc IsAlive (google.protobuf.Empty) returns (google.protobuf.Empty) {};
+message FileProducer {
+    string ip = 1;
+    int32 port = 2;
 }
+
+message FileProducerList {
+    repeated FileProducer producers = 1;
+}*/
 
 service MarketService {
-    rpc AddFileRequest (FileHash) returns (google.protobuf.Empty) {};
-    rpc GetFileRequests (FileHash) returns (FileRequestList) {};
+    rpc AddProducer (FileProducer) returns (google.protobuf.Empty) {};
+    rpc GetProducers (FileHash) returns (FileProducerList) {};
 }
 
-message FileLink {
-    string link = 1;
-    string token = 2;
-    string payment_address = 3;
+message FileProducer {
+    string hash = 1;
+    string link = 2;
+    string price = 3;
+    string payment_address = 4;
 }
 
 message FileHash {
     string hash = 1;
 }
 
-message FileRequest {
-    string ip = 1;
-    int32 port = 2;
-}
-
-message FileRequestList {
-    repeated FileRequest requests = 1;
+message FileProducerList {
+    repeated FileProducer producers = 1;
 }
