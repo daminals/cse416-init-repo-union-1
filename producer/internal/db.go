@@ -6,15 +6,20 @@ import (
 )
 
 type ConsumerRequestInfo struct {
-	RequestedFileHash string
-	NumSentChunks     uint16
+	NumSentChunks uint64
+	AccessToken   string
+}
+
+type Consumer struct {
+	Requests      map[string]*ConsumerRequestInfo
+	WalletAddress string
 }
 
 // Map of active access tokens to the consumer that recieved them
-var AccessTokens = make(map[string]*ConsumerRequestInfo)
+var Consumers = make(map[string]*Consumer)
 
-// Set of file hashes that the producer offers
-var FileHashes = make(map[string]bool)
+// Set of file hashes that the producer offers with their sizes
+var FileHashes = make(map[string]uint64)
 
 func GenerateAccessToken() string {
 	chars := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_-+=@#")
