@@ -24,13 +24,13 @@ run_client "Market" "market/mock.go" "${red}"
 
 sleep 5
 
-# Run consumer client
-run_client "Consumer" "consumer/cmd/consumer.go" "${green}"
+# Run producer client
+run_client "Producer" "producer/cmd/producer.go" "${yellow}"
 
 sleep 5
 
-# Run producer client
-run_client "Producer" "producer/cmd/producer.go" "${yellow}"
+# Run consumer client
+run_client "Consumer" "consumer/cmd/consumer.go" "${green}"
 
 # Wait for all clients to finish
 wait
