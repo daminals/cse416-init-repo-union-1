@@ -16,7 +16,7 @@ func main() {
 	flag.Parse()
 
 	// Add the sample hash
-	internal.FileHashes["hash"] = true
+	internal.FileHashes["hash"] = 1600000
 
 	// Starts the HTTP server on another process
 	wg.Add(1)
@@ -42,11 +42,15 @@ func main() {
 	// Close the connection to the market server
 	internal.CloseMarketServerConnection(*marketServerAddr)
 
-	// Adds a sample access token for testing
-	internal.AccessTokens["123"] = &internal.ConsumerRequestInfo{
-		RequestedFileHash: "file123Hash456",
-		NumSentChunks:     0,
-	}
+	// Adds a sample Consumer entry for testing
+	// internal.Consumers["127.0.0.1"] = &internal.Consumer{
+	// 	Requests:      make(map[string]*internal.ConsumerRequestInfo),
+	// 	WalletAddress: "wallet_address",
+	// }
+	// internal.Consumers["127.0.0.1"].Requests["hash"] = &internal.ConsumerRequestInfo{
+	// 	AccessToken:   "",
+	// 	NumSentChunks: 0,
+	// }
 
 	wg.Wait()
 }
