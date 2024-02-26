@@ -27,7 +27,7 @@ go run producer/producer.go
 
 ### Testing
 
-The test provided will run the market server, and then make a request with the consumer, and then the producer will make a request to the market server. The test will check if the consumer and producer received the expected response.
+The test provided will run the market server, and then make a request with the producer to the market to add a file hash url, then the consumer will query the market for the producer and the producer for the file. The test will check if the consumer and producer received the expected response.
 
 To run the test:
 ```bash 
@@ -36,6 +36,3 @@ To run the test:
 
 ### Notes
 
-We will likely want to establish a communication format for the market to test if the consumer is still active, and if not, remove it from the list of active consumers. Perhaps there can also be a reporting mechanism for the producer to report if the consumer is not responding to requests.
-
-This can be implemented by the market team. The IsAlive protocol is created for this purpose, and is implemented in the consumer. The producer does not need to call IsAlive since it will be requesting via the ReceiveFileInfo protocol.
